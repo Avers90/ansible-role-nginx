@@ -1,0 +1,59 @@
+# {{ ansible_managed }}
+
+user www-data;
+worker_processes {{ nginx_worker_processes }};
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections {{ nginx_worker_connections }};
+    multi_accept on;
+}
+
+http {
+    ##
+    # Basic Settings
+    ##
+    sendfile on;
+    tcp_nopush on;
+    types_hash_max_size 2048;
+    server_tokens {{ nginx_server_tokens }};
+
+    client_max_body_size {{ nginx_client_max_body_size }};
+    keepalive_timeout {{ nginx_keepalive_timeout }};
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    ##
+    # SSL Settings
+    ##
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    ##
+    # Logging Settings
+    ##
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    ##
+    # Gzip Settings
+    ##
+{% if nginx_gzip_enabled | bool %}
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml application/json application/javascript
+               application/rss+xml application/atom+xml image/svg+xml;
+{% else %}
+    gzip off;
+{% endif %}
+
+    ##
+    # Virtual Host Configs
+    ##
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}

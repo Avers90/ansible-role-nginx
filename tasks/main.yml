@@ -1,0 +1,116 @@
+---
+- name: nginx | Fail if distro is not supported
+  ansible.builtin.fail:
+    msg: "Distribution '{{ ansible_facts['distribution'] }}' is not supported. Supported: Debian, Ubuntu"
+  when: ansible_facts['distribution'] not in ['Debian', 'Ubuntu']
+
+- name: nginx | Wait for dpkg lock to be released
+  ansible.builtin.shell: |
+    while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock >/dev/null 2>&1; do
+      sleep 5
+    done
+  changed_when: false
+  async: 300
+  poll: 10
+
+- name: nginx | Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: nginx | Ensure /var/www/html directory exists
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: nginx | Deploy nginx.conf
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "nginx -t -c %s"
+  notify: Reload nginx
+  when: nginx_config_deploy | bool
+
+- name: nginx | Ensure sites-available directory exists
+  ansible.builtin.file:
+    path: /etc/nginx/sites-available
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: nginx | Ensure sites-enabled directory exists
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: nginx | Deploy default virtual host
+  ansible.builtin.template:
+    src: vhost.conf.j2
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+  when: nginx_default_vhost_enabled | bool
+
+- name: nginx | Enable default virtual host
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  notify: Reload nginx
+  when: nginx_default_vhost_enabled | bool
+
+- name: nginx | Disable default virtual host
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+  when: not nginx_default_vhost_enabled | bool
+
+- name: nginx | Ensure default index.html exists
+  ansible.builtin.copy:
+    dest: /var/www/html/index.html
+    content: |
+      <!DOCTYPE html>
+      <html>
+      <head><title>Welcome</title></head>
+      <body><h1>Welcome</h1></body>
+      </html>
+    owner: root
+    group: root
+    mode: "0644"
+    force: false
+  when: nginx_default_vhost_enabled | bool
+
+- name: nginx | Enable and start service
+  ansible.builtin.systemd:
+    name: "{{ nginx_service_name }}"
+    enabled: "{{ nginx_service_enabled }}"
+    state: "{{ nginx_service_state }}"
+    daemon_reload: true
+
+- name: nginx | Display access information
+  ansible.builtin.debug:
+    msg: |
+      nginx installed successfully!
+
+      Listening on: http://{{ ansible_facts['default_ipv4']['address'] | default(inventory_hostname) }}:{{ nginx_default_vhost_port }}
+      Document root: {{ nginx_default_vhost_root }}
+
+      CLI commands:
+        systemctl start nginx
+        systemctl stop nginx
+        systemctl restart nginx
+        nginx -t               (test config)

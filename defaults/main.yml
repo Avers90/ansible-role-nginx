@@ -1,0 +1,38 @@
+---
+## Worker processes (auto = number of CPU cores)
+nginx_worker_processes: "auto"
+
+## Worker connections per process
+nginx_worker_connections: 1024
+
+## Hide nginx version in headers and error pages
+nginx_server_tokens: "off"
+
+## Enable gzip compression
+nginx_gzip_enabled: true
+
+## Deploy default virtual host at /var/www/html
+nginx_default_vhost_enabled: true
+
+## Document root for default virtual host
+nginx_default_vhost_root: /var/www/html
+
+## Port for default virtual host
+nginx_default_vhost_port: 80
+
+## Server name for default virtual host (default_server if empty)
+nginx_default_vhost_server_name: "_"
+
+## Deploy custom nginx.conf from template
+nginx_config_deploy: true
+
+## Client max body size
+nginx_client_max_body_size: "10m"
+
+## Keepalive timeout
+nginx_keepalive_timeout: 65
+
+## Service settings
+nginx_service_name: nginx
+nginx_service_enabled: true
+nginx_service_state: started
