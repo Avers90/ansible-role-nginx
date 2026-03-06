@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+/var/log/nginx/*.log {
+    daily
+    rotate {{ nginx_logrotate_rotate }}
+    maxsize {{ nginx_logrotate_maxsize }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        nginx -s reopen
+    endscript
+}

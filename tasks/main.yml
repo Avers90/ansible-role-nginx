@@ -19,13 +19,21 @@
     state: present
     update_cache: true
 
-- name: nginx | Ensure /var/www/html directory exists
+- name: nginx | Ensure document root directory exists
   ansible.builtin.file:
-    path: /var/www/html
+    path: "{{ nginx_default_vhost_root }}"
     state: directory
     owner: root
     group: root
     mode: "0755"
+
+- name: nginx | Deploy logrotate configuration
+  ansible.builtin.template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/nginx
+    owner: root
+    group: root
+    mode: "0644"
 
 - name: nginx | Deploy nginx.conf
   ansible.builtin.template:
@@ -81,7 +89,7 @@
 
 - name: nginx | Ensure default index.html exists
   ansible.builtin.copy:
-    dest: /var/www/html/index.html
+    dest: "{{ nginx_default_vhost_root }}/index.html"
     content: |
       <!DOCTYPE html>
       <html>

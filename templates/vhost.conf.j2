@@ -7,6 +7,9 @@ server {
     root {{ nginx_default_vhost_root }};
     index index.html index.htm;
 
+    access_log {{ nginx_default_vhost_access_log }};
+    error_log {{ nginx_default_vhost_error_log }};
+
     location / {
         try_files $uri $uri/ =404;
     }

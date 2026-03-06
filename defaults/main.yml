@@ -1,38 +1,149 @@
 ---
-## Worker processes (auto = number of CPU cores)
+# --- nginx.conf: global block ---
+
+## OS user for worker processes (www-data on Debian/Ubuntu via apt)
+nginx_user: www-data
+
+## Number of worker processes (auto = number of CPU cores)
 nginx_worker_processes: "auto"
 
-## Worker connections per process
+## Extra directives injected into the global block (after includes)
+nginx_extra_conf_options: ""
+
+# --- nginx.conf: events block ---
+
+## Max simultaneous connections per worker process
 nginx_worker_connections: 1024
 
-## Hide nginx version in headers and error pages
-nginx_server_tokens: "off"
+## Accept all new connections at once (recommended: on)
+nginx_multi_accept: "on"
 
-## Enable gzip compression
-nginx_gzip_enabled: true
+## Connection processing method (epoll is optimal for Linux)
+nginx_use_method: epoll
 
-## Deploy default virtual host at /var/www/html
-nginx_default_vhost_enabled: true
+## Extra directives injected at the end of events {}
+nginx_extra_events_conf_options: ""
 
-## Document root for default virtual host
-nginx_default_vhost_root: /var/www/html
+# --- nginx.conf: http block ---
 
-## Port for default virtual host
-nginx_default_vhost_port: 80
+## Hash bucket size for server_name (increase for long domain names)
+nginx_server_names_hash_bucket_size: 64
 
-## Server name for default virtual host (default_server if empty)
-nginx_default_vhost_server_name: "_"
-
-## Deploy custom nginx.conf from template
-nginx_config_deploy: true
-
-## Client max body size
+## Maximum allowed client request body size
 nginx_client_max_body_size: "10m"
 
-## Keepalive timeout
-nginx_keepalive_timeout: 65
+## Log format: tab-separated human-readable (main)
+nginx_log_format_main: |-
+  '[$status]'
+  '\tДата и время:[$time_local]'
+  '\tSSL:[$ssl_protocol]'
+  '\tКлиент: $remote_addr'
+  '\tРеальный клиент: $http_x_forwarded_for'
+  '\tЗапрос: [$scheme://$host $request]'
+  '\tНазначение: [$proxy_host$request_uri]\t$http_upgrade'
 
-## Service settings
+## Log format: JSON (for log shippers like Loki, Elasticsearch)
+nginx_log_format_json: |-
+  '{'
+  '"client_ip":"$remote_addr",'
+  '"ident":"$remote_user",'
+  '"timestamp":"$time_local",'
+  '"msec":$msec,'
+  '"host":"$host",'
+  '"http_host":"$http_host",'
+  '"request":"$request",'
+  '"status":$status,'
+  '"body_bytes_sent":$body_bytes_sent,'
+  '"referer":"$http_referer",'
+  '"http_user_agent":"$http_user_agent",'
+  '"http_x_forwarded_for":"$http_x_forwarded_for",'
+  '"request_time":$request_time,'
+  '"upstream_cache_status":"$upstream_cache_status",'
+  '"upstream_status":"$upstream_status",'
+  '"upstream_addr":"$upstream_addr",'
+  '"upstream_response_time":$upstream_response_time,'
+  '"upstream_connect_time":$upstream_connect_time,'
+  '"upstream_header_time":$upstream_header_time,'
+  '"http_cookie":"$http_cookie",'
+  '"connection":$connection,'
+  '"connection_requests":$connection_requests,'
+  '"scheme":"$scheme"'
+  '}'
+
+## Log format name to use for access_log (main | json | "" for combined)
+nginx_access_log_format: "main"
+nginx_access_log: "/var/log/nginx/access.log"
+nginx_error_log: "/var/log/nginx/error.log"
+
+## error_log severity level (debug|info|notice|warn|error|crit)
+nginx_error_log_level: "warn"
+
+## Performance directives
+nginx_sendfile: "on"
+nginx_tcp_nopush: "on"
+nginx_tcp_nodelay: "on"
+nginx_types_hash_max_size: 2048
+nginx_keepalive_timeout: 65
+nginx_keepalive_requests: 1000
+
+## Hide nginx version in Server header and error pages
+nginx_server_tokens: "off"
+
+## SSL settings
+nginx_ssl_protocols: "TLSv1.2 TLSv1.3"
+nginx_ssl_prefer_server_ciphers: "on"
+
+## Proxy cache (disabled by default)
+nginx_proxy_cache_path_enabled: false
+nginx_proxy_cache_path: ""
+
+## Gzip compression
+nginx_gzip: "on"
+nginx_gzip_comp_level: 6
+nginx_gzip_types:
+  - text/plain
+  - text/css
+  - text/xml
+  - application/json
+  - application/javascript
+  - application/rss+xml
+  - application/atom+xml
+  - image/svg+xml
+
+## Extra directives injected at the end of http {} before virtual host includes
+nginx_extra_http_options: ""
+
+# --- Logrotate ---
+
+## Number of rotations to keep
+nginx_logrotate_rotate: 7
+
+## Rotate when log reaches this size (regardless of schedule)
+nginx_logrotate_maxsize: "500M"
+
+# --- Default virtual host ---
+
+## Deploy nginx.conf from template on every run
+nginx_config_deploy: true
+
+## Deploy and enable the default static vhost
+nginx_default_vhost_enabled: true
+
+## Document root for default vhost
+nginx_default_vhost_root: /var/www/html
+
+## Listen port for default vhost
+nginx_default_vhost_port: 80
+
+## server_name for default vhost ("_" = catch-all)
+nginx_default_vhost_server_name: "_"
+
+## Log paths for default vhost
+nginx_default_vhost_access_log: "/var/log/nginx/access.log"
+nginx_default_vhost_error_log: "/var/log/nginx/error.log"
+
+# --- Service ---
+
 nginx_service_name: nginx
 nginx_service_enabled: true
 nginx_service_state: started

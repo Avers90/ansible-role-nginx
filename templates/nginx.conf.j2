@@ -1,26 +1,36 @@
 # {{ ansible_managed }}
 
-user www-data;
+user {{ nginx_user }};
 worker_processes {{ nginx_worker_processes }};
 pid /run/nginx.pid;
 include /etc/nginx/modules-enabled/*.conf;
+{% if nginx_extra_conf_options %}
+{{ nginx_extra_conf_options }}
+{% endif %}
 
 events {
     worker_connections {{ nginx_worker_connections }};
-    multi_accept on;
+    multi_accept {{ nginx_multi_accept }};
+    use {{ nginx_use_method }};
+{% if nginx_extra_events_conf_options %}
+    {{ nginx_extra_events_conf_options }}
+{% endif %}
 }
 
 http {
     ##
     # Basic Settings
     ##
-    sendfile on;
-    tcp_nopush on;
-    types_hash_max_size 2048;
-    server_tokens {{ nginx_server_tokens }};
-
+    server_names_hash_bucket_size {{ nginx_server_names_hash_bucket_size }};
     client_max_body_size {{ nginx_client_max_body_size }};
+
+    sendfile {{ nginx_sendfile }};
+    tcp_nopush {{ nginx_tcp_nopush }};
+    tcp_nodelay {{ nginx_tcp_nodelay }};
+    types_hash_max_size {{ nginx_types_hash_max_size }};
+    server_tokens {{ nginx_server_tokens }};
     keepalive_timeout {{ nginx_keepalive_timeout }};
+    keepalive_requests {{ nginx_keepalive_requests }};
 
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
@@ -28,29 +38,41 @@ http {
     ##
     # SSL Settings
     ##
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
+    ssl_protocols {{ nginx_ssl_protocols }};
+    ssl_prefer_server_ciphers {{ nginx_ssl_prefer_server_ciphers }};
 
     ##
     # Logging Settings
     ##
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
+    log_format main {{ nginx_log_format_main }};
+    log_format json {{ nginx_log_format_json }};
 
+    access_log {{ nginx_access_log }}{% if nginx_access_log_format %} {{ nginx_access_log_format }}{% endif %};
+    error_log {{ nginx_error_log }} {{ nginx_error_log_level }};
+
+{% if nginx_proxy_cache_path_enabled | bool %}
+    ##
+    # Proxy Cache
+    ##
+    proxy_cache_path {{ nginx_proxy_cache_path }};
+
+{% endif %}
     ##
     # Gzip Settings
     ##
-{% if nginx_gzip_enabled | bool %}
-    gzip on;
+    gzip {{ nginx_gzip }};
     gzip_vary on;
     gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml application/json application/javascript
-               application/rss+xml application/atom+xml image/svg+xml;
-{% else %}
-    gzip off;
-{% endif %}
+    gzip_comp_level {{ nginx_gzip_comp_level }};
+    gzip_types {{ nginx_gzip_types | join(' ') }};
 
+{% if nginx_extra_http_options %}
+    ##
+    # Extra Options
+    ##
+    {{ nginx_extra_http_options }}
+
+{% endif %}
     ##
     # Virtual Host Configs
     ##
