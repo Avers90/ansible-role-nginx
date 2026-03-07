@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+
+server {
+    listen {{ nginx_redirect_http_port }} default_server;
+    listen [::]:{{ nginx_redirect_http_port }} default_server;
+    server_name _;
+
+    return 301 https://$host$request_uri;
+}
