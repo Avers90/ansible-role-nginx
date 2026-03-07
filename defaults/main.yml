@@ -129,6 +129,13 @@ nginx_config_deploy: true
 ## Deploy and enable the default static vhost
 nginx_default_vhost_enabled: true
 
+## Redirect all HTTP traffic to HTTPS (deploys redirect.conf on port 80)
+## When enabled, default vhost on port 80 is replaced by the redirect
+nginx_redirect_http_to_https: false
+
+## Port to listen on for HTTP redirect
+nginx_redirect_http_port: 80
+
 ## Document root for default vhost
 nginx_default_vhost_root: /var/www/html
 

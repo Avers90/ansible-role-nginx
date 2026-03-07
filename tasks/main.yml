@@ -102,6 +102,34 @@
     force: false
   when: nginx_default_vhost_enabled | bool
 
+- name: nginx | Deploy HTTP to HTTPS redirect vhost
+  ansible.builtin.template:
+    src: redirect.conf.j2
+    dest: /etc/nginx/sites-available/redirect.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+  when: nginx_redirect_http_to_https | bool
+
+- name: nginx | Enable HTTP to HTTPS redirect vhost
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/redirect.conf
+    dest: /etc/nginx/sites-enabled/redirect.conf
+    state: link
+  notify: Reload nginx
+  when: nginx_redirect_http_to_https | bool
+
+- name: nginx | Remove HTTP to HTTPS redirect vhost
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/nginx/sites-enabled/redirect.conf
+    - /etc/nginx/sites-available/redirect.conf
+  notify: Reload nginx
+  when: not nginx_redirect_http_to_https | bool
+
 - name: nginx | Enable and start service
   ansible.builtin.systemd:
     name: "{{ nginx_service_name }}"
