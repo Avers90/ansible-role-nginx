@@ -4,20 +4,24 @@
     msg: "Distribution '{{ ansible_facts['distribution'] }}' is not supported. Supported: Debian, Ubuntu"
   when: ansible_facts['distribution'] not in ['Debian', 'Ubuntu']
 
-- name: nginx | Wait for dpkg lock to be released
-  ansible.builtin.shell: |
-    while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock >/dev/null 2>&1; do
-      sleep 5
-    done
-  changed_when: false
-  async: 300
-  poll: 10
+- name: nginx | Fail if redirect and default vhost conflict on the same port
+  ansible.builtin.fail:
+    msg: >-
+      nginx_redirect_http_to_https and nginx_default_vhost_enabled both listen on port
+      {{ nginx_redirect_http_port }} — this will cause a duplicate default_server conflict.
+      Either set nginx_default_vhost_enabled: false, change nginx_default_vhost_port,
+      or set nginx_redirect_http_to_https: false.
+  when:
+    - nginx_redirect_http_to_https | bool
+    - nginx_default_vhost_enabled | bool
+    - nginx_redirect_http_port | int == nginx_default_vhost_port | int
 
 - name: nginx | Install nginx
   ansible.builtin.apt:
     name: nginx
     state: present
     update_cache: true
+    lock_timeout: 300
 
 - name: nginx | Ensure document root directory exists
   ansible.builtin.file:
@@ -42,8 +46,12 @@
     owner: root
     group: root
     mode: "0644"
-    validate: "nginx -t -c %s"
   notify: Reload nginx
+  when: nginx_config_deploy | bool
+
+- name: nginx | Validate nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false
   when: nginx_config_deploy | bool
 
 - name: nginx | Ensure sites-available directory exists
@@ -142,7 +150,7 @@
     msg: |
       nginx installed successfully!
 
-      Listening on: http://{{ ansible_facts['default_ipv4']['address'] | default(inventory_hostname) }}:{{ nginx_default_vhost_port }}
+      Listening on: http://{{ ansible_facts['default_ipv4'].get('address', inventory_hostname) }}:{{ nginx_default_vhost_port }}
       Document root: {{ nginx_default_vhost_root }}
 
       CLI commands:
