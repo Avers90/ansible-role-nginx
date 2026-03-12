@@ -138,7 +138,7 @@ Installs and configures vanilla Nginx web server on Debian/Ubuntu.
 
 ## Notes
 
-- Designed to work standalone or as a dependency for other roles (e.g. `ansible-role-marzban`)
-- When used with `ansible-role-marzban`, the default vhost serves the decoy site on `127.0.0.1:8080`
+- Designed to work standalone or as a dependency for other roles (e.g. `ansible-role-remnawave`)
+- When used with `ansible-role-remnawave`, set `nginx_default_vhost_enabled: false` — remnawave deploys its own fallback vhost on `127.0.0.1:8080`
 - `/var/www/html/index.html` is created only on fresh install (`force: false`) — safe to run repeatedly
 - `nginx.conf` is deployed on every run when `nginx_config_deploy: true`; config is validated with `nginx -t` after deploy
