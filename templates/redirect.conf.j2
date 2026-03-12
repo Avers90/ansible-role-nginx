@@ -5,5 +5,12 @@ server {
     listen [::]:{{ nginx_redirect_http_port }} default_server;
     server_name _;
 
-    return 301 https://$host$request_uri;
+    # acme.sh webroot challenge — must not redirect to HTTPS
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
 }
