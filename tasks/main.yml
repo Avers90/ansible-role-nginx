@@ -49,11 +49,6 @@
   notify: Reload nginx
   when: nginx_config_deploy | bool
 
-- name: nginx | Validate nginx configuration
-  ansible.builtin.command: nginx -t
-  changed_when: false
-  when: nginx_config_deploy | bool
-
 - name: nginx | Ensure sites-available directory exists
   ansible.builtin.file:
     path: /etc/nginx/sites-available
@@ -138,6 +133,10 @@
   notify: Reload nginx
   when: not nginx_redirect_http_to_https | bool
 
+- name: nginx | Validate nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false
+
 - name: nginx | Enable and start service
   ansible.builtin.systemd:
     name: "{{ nginx_service_name }}"
@@ -150,7 +149,7 @@
     msg: |
       nginx installed successfully!
 
-      Listening on: http://{{ ansible_facts['default_ipv4'].get('address', inventory_hostname) }}:{{ nginx_default_vhost_port }}
+      Listening on: http://{{ ansible_facts['default_ipv4']['address'] | default(inventory_hostname) }}:{{ nginx_default_vhost_port }}
       Document root: {{ nginx_default_vhost_root }}
 
       CLI commands:
