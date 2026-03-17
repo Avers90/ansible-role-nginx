@@ -113,6 +113,28 @@ nginx_gzip_types:
 ## Extra directives injected at the end of http {} before virtual host includes
 nginx_extra_http_options: ""
 
+## Bot detection (enabled by default for security)
+nginx_bot_detection_enabled: false
+nginx_bot_detection_user_agents:
+  - bot
+  - crawler
+  - spider
+  - scraper
+  - curl
+  - wget
+  - python-requests
+  - java
+  - ruby
+  - go-http-client
+  - scanner
+  - netcraft
+  - semrush
+  - mj12bot
+  - ahrefsbot
+  - dotbot
+  - bingbot
+  - googlebot
+
 # --- Logrotate ---
 
 ## Number of rotations to keep

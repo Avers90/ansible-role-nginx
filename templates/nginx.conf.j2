@@ -66,6 +66,18 @@ http {
     gzip_comp_level {{ nginx_gzip_comp_level }};
     gzip_types {{ nginx_gzip_types | join(' ') }};
 
+{% if nginx_bot_detection_enabled | bool %}
+    ##
+    # Bot Detection
+    ##
+    map $http_user_agent $is_bot {
+        default 0;
+{% for agent in nginx_bot_detection_user_agents %}
+        ~*{{ agent }} 1;
+{% endfor %}
+    }
+
+{% endif %}
 {% if nginx_extra_http_options %}
     ##
     # Extra Options
