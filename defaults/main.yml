@@ -40,7 +40,9 @@ nginx_log_format_main: |-
   '\tClient: $remote_addr'
   '\tReal client: $http_x_forwarded_for'
   '\tRequest: [$scheme://$host $request]'
-  '\tDestination: [$proxy_host$request_uri]\t$http_upgrade'
+  '\tDestination: [$proxy_host$request_uri]'
+  '\tUA:[$http_user_agent]'
+  '\tTime:${request_time}s'
 
 ## Log format: JSON (for log shippers like Loki, Elasticsearch)
 nginx_log_format_json: |-
