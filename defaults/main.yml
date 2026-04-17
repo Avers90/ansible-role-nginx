@@ -35,14 +35,14 @@ nginx_client_max_body_size: "10m"
 ## Log format: tab-separated human-readable (main)
 nginx_log_format_main: |-
   '[$status]'
-  '\tDate and time:[$time_local]'
-  '\tSSL:[$ssl_protocol]'
-  '\tClient: $remote_addr'
-  '\tReal client: $http_x_forwarded_for'
-  '\tRequest: [$scheme://$host $request]'
-  '\tDestination: [$proxy_host$request_uri]'
-  '\tUA:[$http_user_agent]'
-  '\tTime:${request_time}s'
+  '\ttime:[$time_local]'
+  '\tssl:[$ssl_protocol]'
+  '\tclient:[$remote_addr]'
+  '\treal:[$http_x_forwarded_for]'
+  '\trequest:[$scheme://$host $request]'
+  '\tdest:[$proxy_host$request_uri]'
+  '\tua:[$http_user_agent]'
+  '\tduration:[${request_time}s]'
 
 ## Log format: JSON (for log shippers like Loki, Elasticsearch)
 nginx_log_format_json: |-
