@@ -133,6 +133,65 @@
   notify: Reload nginx
   when: not nginx_redirect_http_to_https | bool
 
+- name: nginx | Deploy custom virtual hosts (template)
+  ansible.builtin.template:
+    src: "{{ item.template }}"
+    dest: "/etc/nginx/sites-available/{{ item.name }}.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ nginx_vhosts }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.template is defined
+  notify: Reload nginx
+
+- name: nginx | Deploy custom virtual hosts (inline content)
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "/etc/nginx/sites-available/{{ item.name }}.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ nginx_vhosts }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.content is defined
+  notify: Reload nginx
+
+- name: nginx | Enable custom virtual hosts
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ item.name }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ item.name }}.conf"
+    state: link
+  loop: "{{ nginx_vhosts }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.enabled | default(true) | bool
+  notify: Reload nginx
+
+- name: nginx | Disable custom virtual hosts
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-enabled/{{ item.name }}.conf"
+    state: absent
+  loop: "{{ nginx_vhosts }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: not (item.enabled | default(true) | bool)
+  notify: Reload nginx
+
+- name: nginx | Deploy extra static files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ nginx_extra_files }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  notify: Reload nginx
+
 - name: nginx | Validate nginx configuration
   ansible.builtin.command: nginx -t
   changed_when: false

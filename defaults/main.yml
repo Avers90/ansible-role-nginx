@@ -173,6 +173,32 @@ nginx_default_vhost_server_name: "_"
 nginx_default_vhost_access_log: "/var/log/nginx/access.log"
 nginx_default_vhost_error_log: "/var/log/nginx/error.log"
 
+# --- Custom virtual hosts ---
+
+## Arbitrary vhosts deployed to sites-available and symlinked into sites-enabled.
+## Each item:
+##   name:     (required) base filename → /etc/nginx/sites-available/<name>.conf
+##   template: (optional) path to a .j2 rendered with the template module
+##   content:  (optional) inline string written verbatim (use instead of template)
+##   enabled:  (optional, default true) create/remove the sites-enabled symlink
+## Example:
+##   nginx_vhosts:
+##     - name: faro
+##       template: "{{ playbook_dir }}/../files/3xui/panel/faro.conf.j2"
+##       enabled: true
+nginx_vhosts: []
+
+# --- Extra static files (templated) ---
+
+## Static assets deployed via the template module (so .j2 vars work too).
+## Each item: src (required), dest (required), owner/group/mode (optional).
+## Example:
+##   nginx_extra_files:
+##     - src: "{{ playbook_dir }}/../files/3xui/node-decoy/index.html"
+##       dest: /var/www/html/index.html
+##       mode: "0644"
+nginx_extra_files: []
+
 # --- Service ---
 
 nginx_service_name: nginx
